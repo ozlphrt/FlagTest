@@ -32,11 +32,11 @@ const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerH
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.target.set(0, 0, 0);
-// Disable interactive camera controls
-controls.enabled = false;
-controls.enableZoom = false;
-controls.enableRotate = false;
-controls.enablePan = false;
+// Enable interactive camera controls
+controls.enabled = true;
+controls.enableZoom = true;
+controls.enableRotate = true;
+controls.enablePan = true;
 function isMobilePortrait(): boolean {
 	return window.innerWidth < 768 && window.innerHeight > window.innerWidth;
 }
