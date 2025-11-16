@@ -139,22 +139,55 @@ function clearTracks() {
 
 function getTrackBases(): number[] {
     const continents: Continent[] = ['Africa','Americas','Asia','Europe','Oceania'];
-    const gapX = TILE.spacingX * 1.3;
-    const startX = -gapX * (continents.length - 1) / 2;
+    // Arc configuration: piles form an arc around the hand tile
+    const handZ = TILE.depth * 2.2; // Hand tile Z position (front)
+    const arcRadius = TILE.depth * 3.5; // Distance from hand tile to arc center
+    const arcCenterZ = handZ - arcRadius; // Arc center is behind the hand tile
+    const arcAngleSpan = Math.PI * 0.7; // Arc spans 70% of half circle (126 degrees)
+    const arcStartAngle = Math.PI * 0.5 + arcAngleSpan * 0.5; // Start from right side
+    
     const bases: number[] = [];
-    for (let i = 0; i < continents.length; i++) bases.push(startX + i * gapX);
+    for (let i = 0; i < continents.length; i++) {
+        const t = i / (continents.length - 1); // 0 to 1
+        const angle = arcStartAngle - t * arcAngleSpan; // From right to left
+        const x = Math.cos(angle) * arcRadius;
+        const z = arcCenterZ + Math.sin(angle) * arcRadius;
+        // Store as single value for backward compatibility, but we'll need to update usage
+        // For now, return X positions and handle Z separately
+        bases.push(x);
+    }
     return bases;
+}
+
+// Get Z positions for the arc
+function getTrackBasesZ(): number[] {
+    const continents: Continent[] = ['Africa','Americas','Asia','Europe','Oceania'];
+    const handZ = TILE.depth * 2.2;
+    const arcRadius = TILE.depth * 3.5;
+    const arcCenterZ = handZ - arcRadius;
+    const arcAngleSpan = Math.PI * 0.7;
+    const arcStartAngle = Math.PI * 0.5 + arcAngleSpan * 0.5;
+    
+    const basesZ: number[] = [];
+    for (let i = 0; i < continents.length; i++) {
+        const t = i / (continents.length - 1);
+        const angle = arcStartAngle - t * arcAngleSpan;
+        const z = arcCenterZ + Math.sin(angle) * arcRadius;
+        basesZ.push(z);
+    }
+    return basesZ;
 }
 
 function buildTracks() {
     clearTracks();
     if (!tracksState.visible) return;
     const bases = getTrackBases();
-    const baseZ = 0;
+    const basesZ = getTrackBasesZ();
     const levels = 12;
     const y0 = TILE.height * 0.5;
     for (let i = 0; i < bases.length; i++) {
         const x = bases[i];
+        const baseZ = basesZ[i];
         const h = levels * TILE.layerStepY + TILE.height;
         const rail = new THREE.Mesh(
             new THREE.BoxGeometry(TILE.width * 0.4, h, TILE.depth * 0.4),
@@ -196,11 +229,13 @@ function populateTracksWithTiles(levels = 10) {
     // Build balanced per-continent ISO pool (exactly 10 per continent)
     const balancedPool = buildBalancedIsoPool(randomState.seed, 10);
     const bases = getTrackBases();
-    const baseZ = 0;
+    const basesZ = getTrackBasesZ();
     const y0 = TILE.height * 0.5;
     // Build all slot positions, then shuffle order for random distribution
     const slots: THREE.Vector3[] = [];
-    for (const x of bases) {
+    for (let i = 0; i < bases.length; i++) {
+        const x = bases[i];
+        const baseZ = basesZ[i];
         for (let l = 0; l < levels; l++) {
             const y = y0 + l * TILE.layerStepY;
             slots.push(new THREE.Vector3(x, y, baseZ));
@@ -234,11 +269,11 @@ function populateTracksWithTiles(levels = 10) {
 }
 
 function spawnOutsideTile(levels: number) {
-    // Place an extra tile outside the five piles, to the left of the leftmost pile
+    // Place hand tile at the center of the arc (in front of all piles)
     const bases = getTrackBases();
     if (!bases.length) return;
-    // Center X between leftmost and rightmost piles
-    const handX = (bases[0] + bases[bases.length - 1]) * 0.5;
+    // Center X between leftmost and rightmost piles (arc center X is 0)
+    const handX = 0;
     // In front of piles on +Z, sitting on the base
     const handZ = TILE.depth * 2.2;
     const y = TILE.height * 0.5;
@@ -258,15 +293,18 @@ function updateTrackLabels() {
     // clear old labels
     while (trackLabelsGroup.children.length) trackLabelsGroup.remove(trackLabelsGroup.children[0]);
     const bases = getTrackBases();
-    const baseZ = 0;
+    const basesZ = getTrackBasesZ();
     const thresholdX = TILE.spacingX * 0.6;
+    const thresholdZ = TILE.spacingZ * 0.6;
     let allPure = true;
-    for (const x of bases) {
+    for (let i = 0; i < bases.length; i++) {
+        const x = bases[i];
+        const baseZ = basesZ[i];
         const counts: Record<Continent, number> = { Africa:0, Americas:0, Asia:0, Europe:0, Oceania:0, Unknown:0 } as any;
         let total = 0;
         for (const rec of tileRecords) {
             const p = rec.mesh.position;
-            if (Math.abs(p.x - x) <= thresholdX && Math.abs(p.z - baseZ) <= TILE.spacingZ * 0.6) {
+            if (Math.abs(p.x - x) <= thresholdX && Math.abs(p.z - baseZ) <= thresholdZ) {
                 const c = continentOf(rec.iso);
                 counts[c] = (counts[c] ?? 0) + 1;
                 total += 1;
@@ -1903,18 +1941,22 @@ window.addEventListener('pointerdown', (event: PointerEvent) => {
 
 function handlePileInteraction(clicked: THREE.Mesh) {
     const bases = getTrackBases();
+    const basesZ = getTrackBasesZ();
     if (!bases.length) return;
-    const baseZ = 0;
-    // Identify target pile by closest base X
-    let bestX = bases[0];
+    // Identify target pile by closest base position (X and Z)
+    let bestIdx = 0;
     let bestD = Number.POSITIVE_INFINITY;
-    for (const x of bases) {
-        const d = Math.abs(x - clicked.position.x);
-        if (d < bestD) { bestD = d; bestX = x; }
+    for (let i = 0; i < bases.length; i++) {
+        const dx = clicked.position.x - bases[i];
+        const dz = clicked.position.z - basesZ[i];
+        const d = Math.sqrt(dx * dx + dz * dz);
+        if (d < bestD) { bestD = d; bestIdx = i; }
     }
+    const bestX = bases[bestIdx];
+    const bestZ = basesZ[bestIdx];
     const pileTiles = tileRecords
         .map(r => r.mesh)
-        .filter(m => Math.abs(m.position.x - bestX) <= TILE.spacingX * 0.6 && Math.abs(m.position.z - baseZ) <= TILE.spacingZ * 0.6)
+        .filter(m => Math.abs(m.position.x - bestX) <= TILE.spacingX * 0.6 && Math.abs(m.position.z - bestZ) <= TILE.spacingZ * 0.6)
         .sort((a,b) => a.position.y - b.position.y);
     if (!pileTiles.length) return;
     // a) elevate pile slightly (enough to fit one tile)
@@ -1922,7 +1964,7 @@ function handlePileInteraction(clicked: THREE.Mesh) {
     animatePileRaise(pileTiles, raise, 160);
     // b) move the single outside tile (hand) to the bottom of this pile
     const hand = getHandTile();
-    const bottomTarget = new THREE.Vector3(bestX, TILE.height * 0.5, baseZ);
+    const bottomTarget = new THREE.Vector3(bestX, TILE.height * 0.5, bestZ);
     if (hand) {
         (hand.userData as any).hand = false;
         hand.scale.set(1.0, 1.0, 1.0);
@@ -2164,10 +2206,14 @@ function repopulatePilesRandomUnique(levels = 10) {
     clearTiles();
     const balancedPool = buildBalancedIsoPool(randomState.seed + 24601, 10);
     const bases = getTrackBases();
-    const baseZ = 0;
+    const basesZ = getTrackBasesZ();
     const y0 = TILE.height * 0.5;
     const slots: THREE.Vector3[] = [];
-    for (const x of bases) for (let l = 0; l < levels; l++) slots.push(new THREE.Vector3(x, y0 + l * TILE.layerStepY, baseZ));
+    for (let i = 0; i < bases.length; i++) {
+        const x = bases[i];
+        const baseZ = basesZ[i];
+        for (let l = 0; l < levels; l++) slots.push(new THREE.Vector3(x, y0 + l * TILE.layerStepY, baseZ));
+    }
     const rng = mulberry32(randomState.seed + 8642);
     for (let i = slots.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = slots[i]; slots[i] = slots[j]; slots[j] = t; }
     for (let i = 0; i < slots.length; i++) createTileAt(slots[i], balancedPool[i]);
