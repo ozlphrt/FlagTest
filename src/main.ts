@@ -37,15 +37,39 @@ controls.enabled = false;
 controls.enableZoom = false;
 controls.enableRotate = false;
 controls.enablePan = false;
+function isMobilePortrait(): boolean {
+	return window.innerWidth < 768 && window.innerHeight > window.innerWidth;
+}
+
 function applyCameraActionPreset() {
-	camera.position.set(-0.1354, 6.43418, 6.671806);
-	camera.up.set(0, 1, 0);
-	controls.target.set(-0.06957, -0.14135, -0.06806);
-	camera.fov = 55;
+	const mobile = isMobilePortrait();
+	if (mobile) {
+		// Mobile portrait: wider FOV and adjusted position to fit content
+		camera.position.set(-0.1354, 7.5, 7.0);
+		camera.up.set(0, 1, 0);
+		controls.target.set(-0.06957, -0.14135, -0.06806);
+		camera.fov = 70; // Wider FOV for mobile portrait
+	} else {
+		// Desktop/default
+		camera.position.set(-0.1354, 6.43418, 6.671806);
+		camera.up.set(0, 1, 0);
+		controls.target.set(-0.06957, -0.14135, -0.06806);
+		camera.fov = 55;
+	}
 	camera.updateProjectionMatrix();
 	controls.update();
 }
 applyCameraActionPreset();
+
+// Handle window resize for responsive camera
+function handleResize() {
+	const width = window.innerWidth;
+	const height = window.innerHeight;
+	renderer.setSize(width, height);
+	camera.aspect = width / height;
+	applyCameraActionPreset(); // Re-apply preset with updated aspect
+}
+window.addEventListener('resize', handleResize);
 // Control auto seeding before any references
 let autoSeedOnLoad = true;
 
