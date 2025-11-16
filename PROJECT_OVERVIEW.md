@@ -1,4 +1,10 @@
-# Mahjong 3D — v1.01
+# FlagTest — v1.0.0
+
+## Release Links
+- **Repository**: https://github.com/ozlphrt/FlagTest
+- **Release**: https://github.com/ozlphrt/FlagTest/releases/tag/v1.0.0
+- **Tree**: https://github.com/ozlphrt/FlagTest/tree/v1.0.0
+- **Demo**: https://ozlphrt.github.io/FlagTest/
 
 This project is a WebGL/Three.js prototype for a 3D Mahjong Solitaire experience with 144 tiles in a classic turtle-style stacked layout.
 
