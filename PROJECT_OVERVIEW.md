@@ -1,4 +1,4 @@
-# FlagTest — v1.0.0
+# FlagTest — v1.1.0
 
 ## Release Links
 - **Repository**: https://github.com/ozlphrt/FlagTest
@@ -24,11 +24,21 @@ This project is a WebGL/Three.js prototype for a 3D Mahjong Solitaire experience
 2) Coordinate system explicitly declared and debug helpers visible.
 3) Camera is initialized with `OrbitControls` and stable defaults.
 4) On-screen HUD shows world coordinates under cursor raycast.
-5) All code is runnable via a single `index.html` without a build step.
 
 ## Next Versions
-- v0.2.0: Replace layout with canonical “standard turtle” coordinates and add validation tests.
-- v0.3.0: Tile picking, highlighting, and match-eligibility rules.
-- v0.4.0: Texture atlas for authentic tile faces and proper set distribution.
+- v1.1.0: Redesign for PWA / Mobile-First (Portrait), five-pillar layout, and threshold logic.
+- v1.2.0: Authentic tile faces and distribution rules.
+- v1.3.0: Performance profiling and framerate logging.
 
-
+## Task List
+- [x] Create documentation skeleton per project rules.
+- [x] Add prototype 3D scene (Three.js) with camera + controls.
+- [x] Implement 144-tile turtle-style stacked layout generator.
+- [x] Add coordinate system helpers (Axes, Grid, HUD).
+- [x] Redesign for PWA / Mobile-First (Portrait).
+- [x] Implement five-pillar (left) + hand (right) layout.
+- [x] Implement 30% threshold for continent reveal.
+- [x] Add Settings button with "Unhide" toggle.
+- [x] White tile aesthetic.
+- [ ] Add authentic tile faces and distribution rules.
+- [ ] Performance profiling and framerate logging.
