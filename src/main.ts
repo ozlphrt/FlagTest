@@ -641,6 +641,16 @@ Object.assign(timerDiv.style, {
 timerDiv.innerText = '00:00';
 document.body.appendChild(timerDiv);
 
+// Version Tag
+const versionDiv = document.createElement('div');
+Object.assign(versionDiv.style, {
+	position: 'fixed', bottom: '10px', right: '10px',
+	color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontFamily: 'sans-serif',
+	pointerEvents: 'none', zIndex: '1000'
+});
+versionDiv.innerText = 'v1.1.2';
+document.body.appendChild(versionDiv);
+
 function updateTimer() {
 	if (!gameActive) return;
 	const elapsed = Math.floor((Date.now() - startTime) / 1000);
