@@ -648,7 +648,7 @@ Object.assign(versionDiv.style, {
 	color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontFamily: 'sans-serif',
 	pointerEvents: 'none', zIndex: '1000'
 });
-versionDiv.innerText = 'v1.1.3';
+versionDiv.innerText = 'v1.2.0';
 document.body.appendChild(versionDiv);
 
 function updateTimer() {
