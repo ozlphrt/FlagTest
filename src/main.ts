@@ -644,11 +644,11 @@ document.body.appendChild(timerDiv);
 // Version Tag
 const versionDiv = document.createElement('div');
 Object.assign(versionDiv.style, {
-	position: 'fixed', bottom: '10px', right: '10px',
+	position: 'fixed', bottom: '10px', left: '50%', transform: 'translateX(-50%)',
 	color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontFamily: 'sans-serif',
 	pointerEvents: 'none', zIndex: '1000'
 });
-versionDiv.innerText = 'v1.1.2';
+versionDiv.innerText = 'v1.1.3';
 document.body.appendChild(versionDiv);
 
 function updateTimer() {
