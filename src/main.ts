@@ -648,7 +648,7 @@ Object.assign(versionDiv.style, {
 	color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontFamily: 'sans-serif',
 	pointerEvents: 'none', zIndex: '1000'
 });
-versionDiv.innerText = 'v1.2.0';
+versionDiv.innerText = 'v1.2.1 (NoCache)';
 document.body.appendChild(versionDiv);
 
 function updateTimer() {
@@ -810,6 +810,16 @@ window.addEventListener('pointerdown', (e) => {
 	const mesh = hit.object as THREE.Mesh;
 	if (gameMode === 'pipes') handlePileInteraction(mesh);
 });
+
+// FORCE UNREGISTER SERVICE WORKER (Fix Sticky Cache)
+if ('serviceWorker' in navigator) {
+	navigator.serviceWorker.getRegistrations().then(function (registrations) {
+		for (let registration of registrations) {
+			registration.unregister();
+			console.log('Service Worker Unregistered to force update');
+		}
+	});
+}
 
 window.addEventListener('resize', () => {
 	renderer.setSize(window.innerWidth, window.innerHeight);
